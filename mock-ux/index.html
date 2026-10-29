@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An interactive mock UX for a transparent donation impact tracking platform.">
+  <title>Kindred — Donation Impact Tracker</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #19352f;
+      --muted: #74847d;
+      --green: #2f725c;
+      --green-dark: #245c49;
+      --mint: #e8f3ed;
+      --paper: #f7f8f4;
+      --line: #e7ebe5;
+      --white: #fff;
+      --gold: #e6b755;
+      --shadow: 0 16px 40px rgba(34, 60, 49, .08);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 15px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 4;
+      display: flex;
+      width: 248px;
+      flex-direction: column;
+      padding: 28px 18px 20px;
+      border-right: 1px solid var(--line);
+      background: var(--white);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 10px 38px; }
+    .brand-mark {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      border-radius: 13px;
+      background: var(--green);
+      color: white;
+      font-size: 23px;
+      line-height: 1;
+    }
+    .brand-name { font-size: 19px; font-weight: 750; letter-spacing: -.7px; }
+    .brand-name span { color: var(--green); }
+    .nav-label { padding: 0 12px 10px; color: #a0aaa4; font-size: 10px; font-weight: 750; letter-spacing: 1.2px; text-transform: uppercase; }
+    .nav { display: grid; gap: 5px; }
+    .nav button {
+      display: flex;
+      min-height: 45px;
+      align-items: center;
+      gap: 12px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 11px;
+      background: transparent;
+      color: #74817b;
+      text-align: left;
+      transition: background .18s, color .18s;
+    }
+    .nav button:hover, .nav button.active { background: var(--mint); color: var(--green-dark); }
+    .nav-icon { display: inline-grid; width: 21px; place-items: center; font-size: 17px; }
+    .nav button.active { font-weight: 700; }
+    .sidebar-bottom { margin-top: auto; }
+    .trust-card { padding: 15px; border: 1px solid #e8eee8; border-radius: 15px; background: #f8fbf8; }
+    .trust-card strong { display: block; margin: 6px 0 3px; font-size: 13px; }
+    .trust-card p { margin: 0; color: var(--muted); font-size: 11px; }
+    .trust-icon { color: var(--green); font-size: 18px; }
+    .profile { display: flex; align-items: center; gap: 10px; margin-top: 17px; padding: 12px 8px 0; border-top: 1px solid var(--line); }
+    .avatar { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 50%; background: #f5dfc8; color: #795b3f; font-size: 12px; font-weight: 750; }
+    .profile strong { display: block; font-size: 12px; }
+    .profile small { color: var(--muted); font-size: 10px; }
+    .main { width: calc(100% - 248px); max-width: 1540px; margin-left: 248px; padding: 0 48px 56px; }
+    .topbar { display: flex; height: 86px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+    .breadcrumb { color: var(--muted); font-size: 12px; }
+    .breadcrumb strong { color: var(--ink); font-weight: 650; }
+    .top-actions { display: flex; align-items: center; gap: 12px; }
+    .icon-button { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid var(--line); border-radius: 11px; background: white; color: var(--ink); font-size: 16px; }
+    .today { color: var(--muted); font-size: 12px; }
+    .page { display: none; padding-top: 32px; }
+    .page.active { display: block; animation: appear .22s ease-out; }
+    @keyframes appear { from { opacity: .3; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 7px; font-size: clamp(25px, 3vw, 32px); letter-spacing: -1.2px; line-height: 1.18; }
+    h2 { margin-bottom: 5px; font-size: 18px; letter-spacing: -.4px; }
+    h3 { margin-bottom: 5px; font-size: 15px; }
+    .subheading { margin-bottom: 24px; color: var(--muted); font-size: 13px; }
+    .welcome { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+    .eyebrow { margin-bottom: 9px; color: var(--green); font-size: 10px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; }
+    .button {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 16px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      background: var(--green);
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+      transition: background .18s, transform .18s;
+    }
+    .button:hover { transform: translateY(-1px); background: var(--green-dark); }
+    .button.secondary { border-color: var(--line); background: white; color: var(--ink); }
+    .button.secondary:hover { background: #f8faf8; }
+    .button.ghost { min-height: 34px; padding: 0 11px; background: var(--mint); color: var(--green-dark); }
+    .button.full { width: 100%; }
+    .hero {
+      position: relative;
+      display: flex;
+      min-height: 190px;
+      align-items: center;
+      overflow: hidden;
+      margin-bottom: 20px;
+      padding: 29px 34px;
+      border-radius: 19px;
+      background: linear-gradient(110deg, #1d5847 0%, #31775d 63%, #4f8d68 100%);
+      color: white;
+    }
+    .hero::after {
+      position: absolute;
+      top: -100px;
+      right: 7%;
+      width: 340px;
+      height: 340px;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 50%;
+      box-shadow: 0 0 0 38px rgba(255,255,255,.035), 0 0 0 78px rgba(255,255,255,.03);
+      content: "";
+    }
+    .hero-copy { position: relative; z-index: 1; max-width: 520px; }
+    .hero .eyebrow { color: #c4e7d0; }
+    .hero h2 { max-width: 410px; margin-bottom: 8px; font-size: 24px; letter-spacing: -.7px; }
+    .hero p { margin-bottom: 17px; color: #d7e9dd; font-size: 12px; }
+    .hero .button { min-height: 37px; background: white; color: var(--green-dark); }
+    .hero-art { position: absolute; right: 12%; z-index: 1; display: grid; width: 104px; height: 104px; place-items: center; border: 1px solid rgba(255,255,255,.26); border-radius: 50%; color: #e2c36d; font-size: 45px; }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; margin-bottom: 24px; }
+    .stat-card, .panel, .cause-card, .donation-row, .report-card { border: 1px solid var(--line); border-radius: 15px; background: white; }
+    .stat-card { padding: 17px 18px; }
+    .stat-top { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 11px; }
+    .stat-symbol { display: grid; width: 31px; height: 31px; place-items: center; border-radius: 10px; background: var(--mint); color: var(--green); font-size: 15px; }
+    .stat-value { margin: 11px 0 1px; font-size: 24px; font-weight: 750; letter-spacing: -.8px; }
+    .stat-note { color: var(--muted); font-size: 10px; }
+    .stat-note em { color: var(--green); font-style: normal; font-weight: 700; }
+    .content-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(270px, .85fr); gap: 18px; align-items: start; }
+    .panel { padding: 19px; }
+    .panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    .panel-heading p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+    .text-link { padding: 3px 0; border: 0; background: none; color: var(--green); font-size: 11px; font-weight: 700; }
+    .impact-feature { position: relative; overflow: hidden; min-height: 165px; margin-bottom: 14px; padding: 18px; border-radius: 13px; background: linear-gradient(115deg, #eaf3e9, #f8f2e4); }
+    .impact-feature::after { position: absolute; top: -45px; right: -10px; width: 185px; height: 185px; border: 1px solid rgba(72,117,84,.18); border-radius: 50%; box-shadow: 0 0 0 25px rgba(72,117,84,.06), 0 0 0 50px rgba(72,117,84,.04); content: ""; }
+    .impact-feature > * { position: relative; z-index: 1; }
+    .tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 99px; background: rgba(255,255,255,.78); color: var(--green-dark); font-size: 9px; font-weight: 750; }
+    .impact-feature h3 { max-width: 300px; margin: 11px 0 5px; font-size: 16px; }
+    .impact-feature p { max-width: 300px; margin-bottom: 0; color: #6d7f70; font-size: 11px; }
+    .impact-feature .button { min-height: 32px; margin-top: 12px; }
+    .meter-label { display: flex; justify-content: space-between; margin: 13px 0 6px; color: var(--muted); font-size: 10px; }
+    .meter { height: 6px; overflow: hidden; border-radius: 99px; background: #edf0eb; }
+    .meter span { display: block; height: 100%; border-radius: inherit; background: var(--green); }
+    .activity-list { display: grid; }
+    .activity { display: grid; grid-template-columns: 35px 1fr auto; gap: 10px; align-items: center; padding: 12px 0; border-top: 1px solid #f0f2ef; }
+    .activity-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 11px; background: #f1f5ee; font-size: 15px; }
+    .activity strong { display: block; font-size: 11px; }
+    .activity small { color: var(--muted); font-size: 10px; }
+    .activity-amount { font-size: 11px; font-weight: 700; }
+    .cause-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
+    .cause-card { overflow: hidden; transition: box-shadow .18s, transform .18s; }
+    .cause-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+    .cause-art { display: grid; height: 145px; place-items: center; font-size: 43px; }
+    .art-water { background: linear-gradient(140deg, #d6edf0, #9ed1d0); }
+    .art-school { background: linear-gradient(140deg, #f3e5c7, #ecc68b); }
+    .art-food { background: linear-gradient(140deg, #e2ecd8, #b6d2a4); }
+    .art-health { background: linear-gradient(140deg, #f2dfdf, #e8bebe); }
+    .cause-content { padding: 14px; }
+    .cause-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .cause-meta .tag { background: var(--mint); }
+    .cause-meta small { color: var(--muted); font-size: 9px; }
+    .cause-content h3 { min-height: 38px; font-size: 14px; line-height: 1.4; }
+    .cause-content p { min-height: 34px; margin-bottom: 10px; color: var(--muted); font-size: 10px; }
+    .cause-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+    .cause-footer small { color: var(--muted); font-size: 9px; }
+    .toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 17px; }
+    .filters { display: flex; flex-wrap: wrap; gap: 7px; }
+    .filter {
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      border-radius: 99px;
+      background: white;
+      color: var(--muted);
+      font-size: 10px;
+    }
+    .filter.active { border-color: var(--green); background: var(--green); color: white; }
+    .search { width: min(230px, 100%); padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; outline: none; background: white; font-size: 11px; }
+    .search:focus, input:focus, textarea:focus { border-color: #76a68e; box-shadow: 0 0 0 3px rgba(47,114,92,.1); outline: none; }
+    .donation-list { display: grid; gap: 10px; }
+    .donation-row { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto auto; gap: 13px; align-items: center; padding: 14px; }
+    .donation-row .activity-icon { width: 40px; height: 40px; }
+    .donation-row strong { display: block; font-size: 12px; }
+    .donation-row small { color: var(--muted); font-size: 10px; }
+    .donation-row .value { font-size: 13px; font-weight: 750; }
+    .status { padding: 5px 8px; border-radius: 99px; background: var(--mint); color: var(--green); font-size: 9px; font-weight: 700; white-space: nowrap; }
+    .report-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+    .report-card { padding: 17px; }
+    .report-head { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .report-card p { margin-bottom: 12px; color: var(--muted); font-size: 11px; }
+    .report-line { display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid #f0f2ef; font-size: 10px; }
+    .report-line span { color: var(--muted); }
+    .org-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(270px, .9fr); gap: 17px; align-items: start; }
+    .form-grid { display: grid; gap: 12px; }
+    .form-grid label { display: grid; gap: 5px; color: #52635b; font-size: 10px; font-weight: 700; }
+    .form-grid input, .form-grid textarea, .form-grid select { width: 100%; padding: 10px 11px; border: 1px solid var(--line); border-radius: 9px; background: white; color: var(--ink); font-size: 11px; font-weight: 400; }
+    .form-grid textarea { min-height: 84px; resize: vertical; }
+    .org-update { padding: 12px 0; border-top: 1px solid #f0f2ef; }
+    .org-update strong { display: block; font-size: 11px; }
+    .org-update p { margin: 4px 0; color: var(--muted); font-size: 10px; }
+    .org-update small { color: #99a59e; font-size: 9px; }
+    .empty-note { padding: 35px 18px; color: var(--muted); text-align: center; font-size: 12px; }
+    .overlay { position: fixed; inset: 0; z-index: 10; display: none; align-items: center; justify-content: center; padding: 18px; background: rgba(16, 36, 29, .45); }
+    .overlay.open { display: flex; }
+    .dialog { position: relative; width: min(460px, 100%); max-height: 90vh; overflow-y: auto; padding: 25px; border-radius: 18px; background: white; box-shadow: 0 28px 80px rgba(10,30,22,.22); }
+    .dialog-close { position: absolute; top: 14px; right: 14px; display: grid; width: 31px; height: 31px; place-items: center; border: 1px solid var(--line); border-radius: 9px; background: white; color: var(--muted); }
+    .dialog-art { display: grid; height: 125px; margin: -5px -5px 17px; place-items: center; border-radius: 12px; background: linear-gradient(140deg, #d6edf0, #9ed1d0); font-size: 42px; }
+    .dialog h2 { padding-right: 25px; font-size: 21px; }
+    .dialog p { color: var(--muted); font-size: 12px; }
+    .amount-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
+    .amount-option { padding: 9px 3px; border: 1px solid var(--line); border-radius: 9px; background: white; color: var(--ink); font-size: 11px; }
+    .amount-option.active { border-color: var(--green); background: var(--mint); color: var(--green-dark); font-weight: 750; }
+    .dialog-note { margin: 11px 0 0; color: #8a9690 !important; font-size: 9px !important; text-align: center; }
+    .success-mark { display: grid; width: 58px; height: 58px; margin: 5px auto 15px; place-items: center; border-radius: 50%; background: var(--mint); color: var(--green); font-size: 28px; }
+    .toast { position: fixed; right: 24px; bottom: 24px; z-index: 12; display: none; max-width: min(360px, calc(100% - 32px)); padding: 13px 16px; border-radius: 11px; background: #1d4437; color: white; box-shadow: var(--shadow); font-size: 11px; }
+    .toast.show { display: block; animation: appear .2s ease-out; }
+    .mobile-brand { display: none; }
+    @media (max-width: 1100px) {
+      .main { padding-right: 28px; padding-left: 28px; }
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .cause-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .hero-art { right: 8%; }
+    }
+    @media (max-width: 760px) {
+      .sidebar { inset: auto 0 0; width: 100%; height: 68px; flex-direction: row; justify-content: center; padding: 5px 8px; border-top: 1px solid var(--line); border-right: 0; }
+      .brand, .nav-label, .sidebar-bottom { display: none; }
+      .nav { width: 100%; grid-template-columns: repeat(5, 1fr); gap: 2px; }
+      .nav button { min-height: 54px; flex-direction: column; justify-content: center; gap: 2px; padding: 3px; border-radius: 9px; font-size: 9px; text-align: center; }
+      .nav-icon { font-size: 16px; }
+      .main { width: 100%; margin: 0; padding: 0 17px 90px; }
+      .topbar { height: 62px; }
+      .today { display: none; }
+      .page { padding-top: 24px; }
+      .welcome { align-items: flex-start; }
+      .welcome .button { min-height: 36px; padding: 0 11px; font-size: 10px; }
+      .hero { min-height: 185px; padding: 23px; }
+      .hero h2 { max-width: 290px; font-size: 21px; }
+      .hero-art { right: -25px; opacity: .35; }
+      .content-grid, .org-layout { grid-template-columns: 1fr; }
+      .cause-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .cause-art { height: 110px; }
+      .cause-content { padding: 11px; }
+      .cause-content h3 { font-size: 12px; }
+      .cause-content .button { min-height: 30px; padding: 0 9px; font-size: 10px; }
+      .report-grid { grid-template-columns: 1fr; }
+      .donation-row { grid-template-columns: 36px 1fr auto; gap: 8px; padding: 11px; }
+      .donation-row .status { grid-column: 2 / 4; justify-self: start; margin-top: -3px; }
+      .donation-row .activity-icon { width: 34px; height: 34px; }
+      .toolbar { align-items: flex-start; }
+      .search { width: 100%; }
+    }
+    @media (max-width: 390px) {
+      .stats { gap: 8px; }
+      .stat-card { padding: 12px; }
+      .stat-value { font-size: 21px; }
+      .cause-grid { grid-template-columns: 1fr; }
+      .cause-art { height: 140px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Main navigation">
+      <div class="brand"><div class="brand-mark" aria-hidden="true">✳</div><div class="brand-name">kindred<span>.</span></div></div>
+      <div class="nav-label">Workspace</div>
+      <nav class="nav">
+        <button class="active" data-page="dashboard"><span class="nav-icon" aria-hidden="true">⌂</span>Overview</button>
+        <button data-page="explore"><span class="nav-icon" aria-hidden="true">⌕</span>Explore causes</button>
+        <button data-page="giving"><span class="nav-icon" aria-hidden="true">♡</span>My giving</button>
+        <button data-page="reports"><span class="nav-icon" aria-hidden="true">▤</span>Impact reports</button>
+        <button data-page="organization"><span class="nav-icon" aria-hidden="true">↗</span>Organization</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="trust-card"><span class="trust-icon" aria-hidden="true">✳</span><strong>Giving, made visible.</strong><p>Every contribution deserves a clear story.</p></div>
+        <div class="profile"><div class="avatar" aria-hidden="true">AM</div><div><strong>Alex Morgan</strong><small>Donor account</small></div></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="breadcrumb">Workspace <span aria-hidden="true">/</span> <strong id="current-title">Overview</strong></div>
+        <div class="top-actions"><span class="today">Thursday, October 29</span><button class="icon-button" aria-label="Notifications">♧</button><div class="avatar" aria-label="Alex Morgan">AM</div></div>
+      </header>
+
+      <section class="page active" id="page-dashboard" aria-labelledby="dashboard-title">
+        <div class="welcome">
+          <div><div class="eyebrow">Your giving, in good company</div><h1 id="dashboard-title">Good morning, Alex <span aria-hidden="true">☀</span></h1><p class="subheading">Here’s the difference you’re making, one update at a time.</p></div>
+          <button class="button" data-go="explore">＋ Find a cause</button>
+        </div>
+        <section class="hero" aria-label="Featured impact story">
+          <div class="hero-copy"><div class="eyebrow">Your latest impact story</div><h2>Clean water is closer for 42 families.</h2><p>Your gift helped bring a new well to the Kijani community.</p><button class="button" data-open-detail="water">See the impact <span aria-hidden="true">→</span></button></div>
+          <div class="hero-art" aria-hidden="true">◉</div>
+        </section>
+        <section class="stats" aria-label="Giving summary">
+          <article class="stat-card"><div class="stat-top"><span>Total contributed</span><span class="stat-symbol" aria-hidden="true">♡</span></div><div class="stat-value">$1,240</div><div class="stat-note"><em>↑ 12%</em> from last year</div></article>
+          <article class="stat-card"><div class="stat-top"><span>Projects supported</span><span class="stat-symbol" aria-hidden="true">⌂</span></div><div class="stat-value">08</div><div class="stat-note">Across <em>4 communities</em></div></article>
+          <article class="stat-card"><div class="stat-top"><span>People reached</span><span class="stat-symbol" aria-hidden="true">♧</span></div><div class="stat-value">186</div><div class="stat-note">Verified by partner updates</div></article>
+          <article class="stat-card"><div class="stat-top"><span>Updates received</span><span class="stat-symbol" aria-hidden="true">▤</span></div><div class="stat-value">14</div><div class="stat-note"><em>3 new</em> this month</div></article>
+        </section>
+        <div class="content-grid">
+          <section class="panel">
+            <div class="panel-heading"><div><h2>Impact in progress</h2><p>See how active projects are moving forward.</p></div><button class="text-link" data-go="reports">All reports →</button></div>
+            <article class="impact-feature">
+              <span class="tag">● &nbsp; UPDATE · 2 DAYS AGO</span>
+              <h3>A new classroom is taking shape</h3>
+              <p>Materials are on site and the foundation is complete at Mwangaza Primary School.</p>
+              <button class="button ghost" data-open-detail="school">View project update →</button>
+            </article>
+            <div class="meter-label"><span>Mwangaza classroom · Project progress</span><strong>68%</strong></div><div class="meter" aria-label="68% complete"><span style="width:68%"></span></div>
+          </section>
+          <section class="panel">
+            <div class="panel-heading"><div><h2>Recent giving</h2><p>Your latest contributions</p></div><button class="text-link" data-go="giving">View all →</button></div>
+            <div class="activity-list">
+              <div class="activity"><div class="activity-icon" aria-hidden="true">💧</div><div><strong>Kijani clean water</strong><small>Oct 18 · One-time gift</small></div><span class="activity-amount">$50</span></div>
+              <div class="activity"><div class="activity-icon" aria-hidden="true">📚</div><div><strong>Mwangaza classroom</strong><small>Sep 30 · Monthly gift</small></div><span class="activity-amount">$25</span></div>
+              <div class="activity"><div class="activity-icon" aria-hidden="true">🌱</div><div><strong>Harvest for All</strong><small>Sep 12 · One-time gift</small></div><span class="activity-amount">$40</span></div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="page" id="page-explore" aria-labelledby="explore-title">
+        <div class="welcome"><div><div class="eyebrow">Make your next move</div><h1 id="explore-title">Find a cause to care about</h1><p class="subheading">Meet trusted community projects and see what your support can do.</p></div></div>
+        <div class="toolbar"><div class="filters" aria-label="Filter causes"><button class="filter active" data-filter="all">All causes</button><button class="filter" data-filter="water">Clean water</button><button class="filter" data-filter="education">Education</button><button class="filter" data-filter="food">Food security</button><button class="filter" data-filter="health">Healthcare</button></div><input class="search" id="cause-search" type="search" placeholder="Search projects" aria-label="Search projects"></div>
+        <div class="cause-grid" id="cause-grid"></div>
+      </section>
+
+      <section class="page" id="page-giving" aria-labelledby="giving-title">
+        <div class="welcome"><div><div class="eyebrow">Your generosity, all in one place</div><h1 id="giving-title">My giving</h1><p class="subheading">A clear record of what you gave and the updates that followed.</p></div><button class="button secondary" id="download-receipt">↓ Download summary</button></div>
+        <section class="stats" aria-label="Giving summary"><article class="stat-card"><div class="stat-top"><span>Lifetime giving</span><span class="stat-symbol">♡</span></div><div class="stat-value">$1,240</div><div class="stat-note">Since January 2024</div></article><article class="stat-card"><div class="stat-top"><span>Active monthly gifts</span><span class="stat-symbol">↻</span></div><div class="stat-value">$75</div><div class="stat-note">Across 3 projects</div></article><article class="stat-card"><div class="stat-top"><span>Tax receipts</span><span class="stat-symbol">▤</span></div><div class="stat-value">12</div><div class="stat-note">Ready to download</div></article><article class="stat-card"><div class="stat-top"><span>Projects supported</span><span class="stat-symbol">⌂</span></div><div class="stat-value">08</div><div class="stat-note">4 communities reached</div></article></section>
+        <section class="panel"><div class="panel-heading"><div><h2>Contribution history</h2><p>Each gift is connected to its project updates.</p></div><select class="search" aria-label="Filter donations by year"><option>2025 — All contributions</option><option>2024 — All contributions</option></select></div><div class="donation-list" id="donation-list"></div></section>
+      </section>
+
+      <section class="page" id="page-reports" aria-labelledby="reports-title">
+        <div class="welcome"><div><div class="eyebrow">Follow the story behind your gift</div><h1 id="reports-title">Impact reports</h1><p class="subheading">Updates from partner organizations, with progress you can understand.</p></div></div>
+        <div class="report-grid" id="report-grid"></div>
+      </section>
+
+      <section class="page" id="page-organization" aria-labelledby="organization-title">
+        <div class="welcome"><div><div class="eyebrow">Partner workspace · Demo</div><h1 id="organization-title">Organization updates</h1><p class="subheading">Share clear, timely progress with the people who make your work possible.</p></div><span class="tag">● &nbsp; VERIFIED PARTNER</span></div>
+        <div class="org-layout">
+          <section class="panel"><div class="panel-heading"><div><h2>Post a project update</h2><p>Show donors what changed and how contributions helped.</p></div></div>
+            <form class="form-grid" id="update-form">
+              <label>Project<select id="update-project" required><option value="Kijani clean water">Kijani clean water</option><option value="Mwangaza classroom">Mwangaza classroom</option><option value="Harvest for All">Harvest for All</option></select></label>
+              <label>Update title<input id="update-title" required maxlength="90" placeholder="e.g. The first classroom walls are up"></label>
+              <label>What changed?<textarea id="update-body" required maxlength="350" placeholder="Describe the progress and how donor contributions helped."></textarea></label>
+              <label>Funds used for<input id="update-funds" placeholder="e.g. $1,200 · construction materials"></label>
+              <button class="button" type="submit">Publish project update →</button>
+            </form>
+          </section>
+          <section class="panel"><div class="panel-heading"><div><h2>Recent updates</h2><p>Updates visible to donors</p></div></div><div id="organization-updates"></div></section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="overlay" id="dialog-overlay" role="presentation">
+    <section class="dialog" id="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+      <button class="dialog-close" id="dialog-close" aria-label="Close dialog">×</button>
+      <div id="dialog-content"></div>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const projects = [
+      { id: "water", category: "water", name: "Kijani clean water", org: "Waterways Collective", emoji: "💧", art: "art-water", location: "Kijani, Kenya", goal: 18000, raised: 12420, people: "42 families", summary: "Bring safe, reliable water closer to homes in the Kijani community.", detail: "The community's new well is drilled and lined. Your gift helps finish the solar pump and water point, so families can spend less time collecting water and more time at home and school.", update: "The well is complete. The solar pump installation is next, with local technicians scheduled this month." },
+      { id: "school", category: "education", name: "Mwangaza classroom", org: "Bright Futures Network", emoji: "📚", art: "art-school", location: "Mwangaza, Tanzania", goal: 12000, raised: 8160, people: "68 students", summary: "Build a bright, safe classroom for students learning outdoors today.", detail: "A new classroom gives 68 students a weather-safe place to learn. Local builders and families are working together, and updates include milestones, materials and progress.", update: "Materials are on site and the foundation is complete. The walls are expected to be finished next month." },
+      { id: "food", category: "food", name: "Harvest for All", org: "Community Roots", emoji: "🌱", art: "art-food", location: "Kisumu County, Kenya", goal: 9000, raised: 5580, people: "120 growers", summary: "Help local growers build resilient harvests and strengthen food access.", detail: "Growers receive locally selected seeds, hands-on training and shared storage. The project tracks participating households and seasonal harvest outcomes.", update: "120 growers have received seeds and training; the first shared storage unit is now in use." },
+      { id: "health", category: "health", name: "Care close to home", org: "Open Hands Health", emoji: "🩺", art: "art-health", location: "Makueni, Kenya", goal: 15000, raised: 9750, people: "310 visits", summary: "Equip a mobile health team to reach families beyond the clinic.", detail: "Mobile clinics bring basic care and health education to villages far from the nearest facility. Partner reports show service visits, medicine supplies and outreach schedules.", update: "The mobile team completed 74 visits this month and restocked essential supplies." }
+    ];
+    const donations = [
+      { project: "Kijani clean water", date: "October 18, 2025", amount: "$50.00", status: "Impact update available", emoji: "💧" },
+      { project: "Mwangaza classroom", date: "September 30, 2025", amount: "$25.00", status: "Monthly · Active", emoji: "📚" },
+      { project: "Harvest for All", date: "September 12, 2025", amount: "$40.00", status: "Impact update available", emoji: "🌱" },
+      { project: "Care close to home", date: "August 21, 2025", amount: "$75.00", status: "Impact update available", emoji: "🩺" },
+      { project: "Kijani clean water", date: "July 18, 2025", amount: "$50.00", status: "Impact update available", emoji: "💧" }
+    ];
+    const initialUpdates = [
+      { project: "Kijani clean water", title: "The well is complete", body: "The well is complete. Solar pump installation is next, with local technicians scheduled this month.", funds: "$2,400 · well lining and labor", time: "2 days ago" },
+      { project: "Mwangaza classroom", title: "A new classroom is taking shape", body: "Materials are on site and the foundation is complete at Mwangaza Primary School.", funds: "$1,200 · construction materials", time: "5 days ago" },
+      { project: "Harvest for All", title: "Seeds and skills for a strong season", body: "120 growers received locally selected seeds and joined practical soil health training.", funds: "$860 · seeds and training", time: "2 weeks ago" }
+    ];
+    let activeFilter = "all";
+    let pickedAmount = 50;
+    let latestUpdates = [...initialUpdates];
+    let toastTimer;
+    const titles = { dashboard: "Overview", explore: "Explore causes", giving: "My giving", reports: "Impact reports", organization: "Organization" };
+    const formatMoney = value => "$" + value.toLocaleString("en-US");
+    const escapeHTML = value => String(value).replace(/[&<>"']/g, character => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[character]);
+
+    function renderProjects() {
+      const query = document.getElementById("cause-search").value.trim().toLowerCase();
+      const filtered = projects.filter(project => (activeFilter === "all" || project.category === activeFilter) &&
+        `${project.name} ${project.org} ${project.location}`.toLowerCase().includes(query));
+      document.getElementById("cause-grid").innerHTML = filtered.length ? filtered.map(project => `
+        <article class="cause-card">
+          <div class="cause-art ${project.art}" aria-hidden="true">${project.emoji}</div>
+          <div class="cause-content">
+            <div class="cause-meta"><span class="tag">${project.category === "water" ? "Clean water" : project.category === "education" ? "Education" : project.category === "food" ? "Food security" : "Healthcare"}</span><small>${project.location}</small></div>
+            <h3>${project.name}</h3><p>${project.summary}</p>
+            <div class="meter-label"><span>${formatMoney(project.raised)} raised</span><strong>${Math.round(project.raised / project.goal * 100)}%</strong></div>
+            <div class="meter"><span style="width:${Math.round(project.raised / project.goal * 100)}%"></span></div>
+            <div class="cause-footer"><small>Goal ${formatMoney(project.goal)}</small><button class="button ghost" data-open-detail="${project.id}">View cause →</button></div>
+          </div>
+        </article>`).join("") : '<div class="empty-note">No projects match your search. Try another keyword or category.</div>';
+    }
+    function renderDonations() {
+      document.getElementById("donation-list").innerHTML = donations.map((donation, index) => `
+        <article class="donation-row"><div class="activity-icon" aria-hidden="true">${donation.emoji}</div><div><strong>${donation.project}</strong><small>${donation.date} · ${index === 1 ? "Monthly gift" : "One-time gift"}</small></div><span class="value">${donation.amount}</span><span class="status">${donation.status}</span></article>`).join("");
+    }
+    function renderReports() {
+      document.getElementById("report-grid").innerHTML = projects.map(project => {
+        const progress = Math.round(project.raised / project.goal * 100);
+        const recent = latestUpdates.find(update => update.project === project.name);
+        return `<article class="report-card"><div class="report-head"><div><span class="tag">● &nbsp; PARTNER VERIFIED</span><h3 style="margin-top:10px">${project.name}</h3></div><span class="activity-icon" aria-hidden="true">${project.emoji}</span></div><p>${escapeHTML(recent ? recent.body : project.update)}</p><div class="meter-label"><span>Fundraising progress</span><strong>${progress}%</strong></div><div class="meter"><span style="width:${progress}%"></span></div><div class="report-line"><span>Raised of ${formatMoney(project.goal)}</span><strong>${formatMoney(project.raised)}</strong></div><div class="report-line"><span>People reached</span><strong>${project.people}</strong></div><button class="text-link" data-open-detail="${project.id}">Open project story →</button></article>`;
+      }).join("");
+    }
+    function renderOrganizationUpdates() {
+      document.getElementById("organization-updates").innerHTML = latestUpdates.map(update => `<article class="org-update"><strong>${escapeHTML(update.title)}</strong><p>${escapeHTML(update.body)}</p><small>${escapeHTML(update.project)} · ${escapeHTML(update.funds || "Progress update")} · ${escapeHTML(update.time)}</small></article>`).join("");
+    }
+    function showPage(page) {
+      document.querySelectorAll(".page").forEach(section => section.classList.toggle("active", section.id === `page-${page}`));
+      document.querySelectorAll(".nav button").forEach(button => button.classList.toggle("active", button.dataset.page === page));
+      document.getElementById("current-title").textContent = titles[page];
+      if (page === "explore") renderProjects();
+      if (page === "reports") renderReports();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 3200);
+    }
+    function openDialog(content) {
+      document.getElementById("dialog-content").innerHTML = content;
+      const overlay = document.getElementById("dialog-overlay");
+      overlay.classList.add("open");
+      document.getElementById("dialog-close").focus();
+    }
+    function closeDialog() {
+      document.getElementById("dialog-overlay").classList.remove("open");
+    }
+    function openProject(projectId) {
+      const project = projects.find(item => item.id === projectId);
+      if (!project) return;
+      openDialog(`<div class="dialog-art ${project.art}" aria-hidden="true">${project.emoji}</div><span class="tag">● &nbsp; PARTNER VERIFIED</span><h2 id="dialog-title">${project.name}</h2><p>${project.org} · ${project.location}</p><p>${project.detail}</p><div class="meter-label"><span>${formatMoney(project.raised)} raised of ${formatMoney(project.goal)}</span><strong>${Math.round(project.raised / project.goal * 100)}%</strong></div><div class="meter"><span style="width:${Math.round(project.raised / project.goal * 100)}%"></span></div><h3 style="margin-top:20px">Latest update</h3><p>${project.update}</p><button class="button full" data-donate="${project.id}">Support this project →</button><p class="dialog-note">You’ll receive updates as the project progresses.</p>`);
+    }
+    function openDonation(projectId) {
+      const project = projects.find(item => item.id === projectId);
+      if (!project) return;
+      pickedAmount = 50;
+      openDialog(`<div class="eyebrow">Make a difference today</div><h2 id="dialog-title">Support ${project.name}</h2><p>Your gift helps ${project.people.toLowerCase()} and is connected to future project updates.</p><div class="form-grid"><label>Choose a gift amount</label><div class="amount-options">${[25, 50, 100, 250].map(amount => `<button class="amount-option ${amount === pickedAmount ? "active" : ""}" type="button" data-amount="${amount}">$${amount}</button>`).join("")}</div><label>Or enter another amount<input id="custom-amount" type="number" min="1" max="10000" placeholder="Amount in USD"></label><label style="display:flex;grid-template-columns:16px 1fr;align-items:center;font-weight:500"><input type="checkbox" id="monthly-gift" style="width:14px;height:14px"> Make this a monthly gift</label><button class="button full" id="confirm-donation">Continue with $${pickedAmount} →</button></div><p class="dialog-note">Demo interaction only — no payment is collected.</p>`);
+    }
+
+    document.addEventListener("click", event => {
+      const target = event.target.closest("button");
+      if (!target) return;
+      if (target.dataset.page) showPage(target.dataset.page);
+      if (target.dataset.go) showPage(target.dataset.go);
+      if (target.dataset.filter) {
+        activeFilter = target.dataset.filter;
+        document.querySelectorAll(".filter").forEach(filter => filter.classList.toggle("active", filter === target));
+        renderProjects();
+      }
+      if (target.dataset.openDetail) openProject(target.dataset.openDetail);
+      if (target.dataset.donate) openDonation(target.dataset.donate);
+      if (target.dataset.amount) {
+        pickedAmount = Number(target.dataset.amount);
+        document.querySelectorAll(".amount-option").forEach(option => option.classList.toggle("active", option === target));
+        document.getElementById("custom-amount").value = "";
+        document.getElementById("confirm-donation").textContent = `Continue with $${pickedAmount} →`;
+      }
+      if (target.id === "dialog-close") closeDialog();
+      if (target.id === "confirm-donation") {
+        const custom = Number(document.getElementById("custom-amount").value);
+        const amount = custom || pickedAmount;
+        if (!Number.isFinite(amount) || amount < 1 || amount > 10000) {
+          document.getElementById("custom-amount").setCustomValidity("Enter an amount between $1 and $10,000.");
+          document.getElementById("custom-amount").reportValidity();
+          return;
+        }
+        openDialog(`<div class="success-mark" aria-hidden="true">✓</div><h2 id="dialog-title" style="text-align:center">Your support matters.</h2><p style="text-align:center">Your demo gift of <strong>${formatMoney(amount)}</strong> is ready to make an impact. In a live product, you’d continue to secure checkout and receive a receipt.</p><button class="button full" id="done-donation">Back to my dashboard</button><p class="dialog-note">This mock UX does not process payments.</p>`);
+      }
+      if (target.id === "done-donation") { closeDialog(); showPage("dashboard"); showToast("Demo journey complete — no payment was processed."); }
+      if (target.id === "download-receipt") showToast("Your giving summary is ready in this demo.");
+    });
+    document.getElementById("cause-search").addEventListener("input", renderProjects);
+    document.getElementById("dialog-content").addEventListener("input", event => {
+      if (event.target.id !== "custom-amount") return;
+      const amount = Number(event.target.value);
+      if (amount > 0) document.getElementById("confirm-donation").textContent = `Continue with $${amount} →`;
+      event.target.setCustomValidity("");
+    });
+    document.getElementById("dialog-overlay").addEventListener("click", event => {
+      if (event.target.id === "dialog-overlay") closeDialog();
+    });
+    document.addEventListener("keydown", event => { if (event.key === "Escape") closeDialog(); });
+    document.getElementById("update-form").addEventListener("submit", event => {
+      event.preventDefault();
+      const project = document.getElementById("update-project").value;
+      const title = document.getElementById("update-title").value.trim();
+      const body = document.getElementById("update-body").value.trim();
+      const funds = document.getElementById("update-funds").value.trim();
+      latestUpdates.unshift({ project, title, body, funds, time: "Just now" });
+      renderOrganizationUpdates();
+      renderReports();
+      event.target.reset();
+      showToast("Project update published in this demo. Donors can now see the new story.");
+    });
+    renderProjects();
+    renderDonations();
+    renderReports();
+    renderOrganizationUpdates();
+  </script>
+</body>
+</html>
